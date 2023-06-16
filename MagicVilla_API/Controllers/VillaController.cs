@@ -18,13 +18,18 @@ namespace MagicVilla_API.Controllers
         
         }
 
-        [HttpGet("id")]//endpoint que devuelve un objeto que coincida con el parámetro id que se le especifique
+        [HttpGet("id:int", Name ="GetVilla")]//endpoint que devuelve un objeto que coincida con el parámetro id que se le especifique
+        
+        //para evitar que los codigos de estados aparezcan como no documentado
+        [ProducesResponseType(StatusCodes.Status200OK)]//documenta el estado 200
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]//documenta el estado 400
+        [ProducesResponseType(StatusCodes.Status404NotFound)]//documenta el estado 404
         public ActionResult<VillaDto> GetVilla(int id)
         {
 
             if(id == 0) 
             { 
-                return BadRequest();
+                return BadRequest();//regresa un bad request 400
             }
             var villa = VillaStore.villaList.FirstOrDefault(v => v.Id == id);
 
@@ -33,8 +38,37 @@ namespace MagicVilla_API.Controllers
                 return NotFound();//regresa un estado 404
             }
 
-            return Ok(villa);
+            return Ok(villa);//regresa un estado 200
 
+        }
+
+        [HttpPost]
+
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public ActionResult<VillaDto> CrearVilla([FromBody] VillaDto villaDto) 
+        { 
+
+            if(! ModelState.IsValid )
+            {
+                return BadRequest(ModelState);
+            }
+            
+            if(villaDto == null)
+            {
+                return BadRequest(villaDto);
+            }
+            if(villaDto.Id > 0)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
+            villaDto.Id = VillaStore.villaList.OrderByDescending(v => v.Id).FirstOrDefault().Id + 1;
+            VillaStore.villaList.Add(villaDto);
+
+            return CreatedAtRoute("GetVilla", new {id=villaDto.Id}, villaDto);
+            //se llama la ruta GetVilla, se le emvía como parámetro el Id y se especifica el modelo villaDto 
         }
     }
 }
