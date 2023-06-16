@@ -54,6 +54,15 @@ namespace MagicVilla_API.Controllers
             {
                 return BadRequest(ModelState);
             }
+
+            //validar que no se dupliquen dos registros
+            if(VillaStore.villaList.FirstOrDefault(v => v.Nombre.ToLower() == villaDto.Nombre.ToLower()) != null)
+            {
+                ModelState.AddModelError("NombreExiste", "La villa con ese nombre ya existe!");
+                                          //nombre validacion //mensaje que se muestra
+                return BadRequest(ModelState);
+            }
+
             
             if(villaDto == null)
             {
@@ -70,5 +79,31 @@ namespace MagicVilla_API.Controllers
             return CreatedAtRoute("GetVilla", new {id=villaDto.Id}, villaDto);
             //se llama la ruta GetVilla, se le emvía como parámetro el Id y se especifica el modelo villaDto 
         }
+
+
+        [HttpDelete("{id:int}")]
+
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+
+        public IActionResult DeleteVilla(int id)
+        {
+            if (id == 0)
+            {
+                return BadRequest();
+            }
+
+            var villa = VillaStore.villaList.FirstOrDefault( v => v.Id == id );
+            if (villa == null)
+            {
+                return NotFound();
+            }
+
+            VillaStore.villaList.Remove(villa);
+
+            return NoContent();//siempre se debe retornar NoContent() cuando se trabaja con delete
+        }
+
     }
 }
